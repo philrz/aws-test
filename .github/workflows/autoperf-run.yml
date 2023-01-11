@@ -17,6 +17,7 @@ jobs:
     - name: Grab the length of the incoming Zed commit queue
       run: |
         length=$(aws sqs get-queue-attributes --queue-url ${{ secrets.AWS_SQS_QUEUE_URL_AUTOPERF }} --attribute-names ApproximateNumberOfMessages | jq -r ".Attributes.ApproximateNumberOfMessages")
+        echo "Length: $length"
         echo "length=$length" >> $GITHUB_OUTPUT
       id: queue
     - name: Check if the Autoperf instance is stopped and available
