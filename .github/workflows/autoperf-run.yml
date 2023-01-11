@@ -21,13 +21,13 @@ jobs:
         echo "length=$length" >> $GITHUB_OUTPUT
       id: queue
     - name: Check if the Autoperf instance is stopped and available
-      if: steps.queue.length > 0
+      if: steps.queue.outputs.length > 0
       run: |
         ec2_info=$(aws ec2 describe-instances --filters "Name=instance-state-name,Values=stopped" "Name=tag:Name,Values=${{ secrets.AUTOPERF_HOSTNAME }}" "Name=tag:Mode,Values=Active")
         echo "available=$(echo "$ec2_info" | jq '.Reservations | length')" " >> $GITHUB_OUTPUT
         echo "instance_id=$(echo "$ec2_info" | jq '.Reservations[0].Instances[0].InstanceId')" >> $GITHUB_OUTPUT
       id: instances
     - name: Boot the Autoperf instance if appropriate
-      if: steps.queue.length > 0 && steps.instances.available == 1
+      if: steps.queue.outputs.length > 0 && steps.instances.outputs.available == 1
       run: |
-        echo "I would now run: aws ec2 start-instances --instance-ids ${{ steps.instances.instance_id }}"
+        echo "I would now run: aws ec2 start-instances --instance-ids ${{ steps.instances.outputs.instance_id }}"
