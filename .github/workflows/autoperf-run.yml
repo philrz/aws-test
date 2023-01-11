@@ -1,0 +1,32 @@
+name: Start an Autoperf cycle
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check-and-start:
+    name: Start an Autoperf cycle
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1-node16
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-2
+    - name: Grab the length of the incoming Zed commit queue
+      run: |
+        length=$(aws sqs get-queue-attributes --queue-url ${{ secrets.AWS_SQS_QUEUE_URL_AUTOPERF }} --attribute-names ApproximateNumberOfMessages | jq -r ".Attributes.ApproximateNumberOfMessages")
+        echo "length=$length" >> $GITHUB_OUTPUT
+      id: queue
+    - name: Check if the Autoperf instance is stopped and available
+      if: steps.queue.length > 0
+      run: |
+        ec2_info=$(aws ec2 describe-instances --filters "Name=instance-state-name,Values=stopped" "Name=tag:Name,Values=${{ secrets.AUTOPERF_HOSTNAME }}" "Name=tag:Mode,Values=Active")
+        echo "available=$(echo "$ec2_info" | jq '.Reservations | length')" " >> $GITHUB_OUTPUT
+        echo "instance_id=$(echo "$ec2_info" | jq '.Reservations[0].Instances[0].InstanceId')" >> $GITHUB_OUTPUT
+      id: instances
+    - name: Boot the Autoperf instance if appropriate
+      if: steps.queue.length > 0 && steps.instances.available == 1
+      run: |
+        echo "I would now run: aws ec2 start-instances --instance-ids ${{ steps.instances.instance_id }}"
