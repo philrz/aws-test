@@ -33,4 +33,4 @@ jobs:
     - name: Boot the Autoperf instance if appropriate
       if: steps.queue.outputs.length > 0 && steps.instances.outputs.available == 1
       run: |
-        echo "I would now run: aws ec2 start-instances --instance-ids ${{ steps.instances.outputs.instance_id }}"
+        aws ec2 start-instances --instance-ids ${{ steps.instances.outputs.instance_id }}
