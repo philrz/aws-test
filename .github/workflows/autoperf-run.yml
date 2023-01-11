@@ -24,7 +24,7 @@ jobs:
       if: steps.queue.outputs.length > 0
       run: |
         ec2_info=$(aws ec2 describe-instances --filters "Name=instance-state-name,Values=stopped" "Name=tag:Name,Values=${{ secrets.AUTOPERF_HOSTNAME }}" "Name=tag:Mode,Values=Active")
-        echo "available=$(echo "$ec2_info" | jq '.Reservations | length')" " >> $GITHUB_OUTPUT
+        echo "available=$(echo "$ec2_info" | jq '.Reservations | length')" >> $GITHUB_OUTPUT
         echo "instance_id=$(echo "$ec2_info" | jq '.Reservations[0].Instances[0].InstanceId')" >> $GITHUB_OUTPUT
       id: instances
     - name: Boot the Autoperf instance if appropriate
